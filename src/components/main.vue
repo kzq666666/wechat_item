@@ -1,0 +1,203 @@
+<template>
+  <div class="main">
+    <div class="info">商品库存信息</div>
+    <div class="detail">
+      <div class="item" v-for="(item,index) in data" :key="index">
+        <div>
+          <span class="itemL">abiid</span>
+          <span class="itemR">{{item.abiid}}</span>
+        </div>
+        <div>
+          <span class="itemL">name</span>
+          <span class="itemR mainname">{{item.mainname}}</span>
+        </div>
+        <div>
+          <span class="itemL">stock</span>
+          <span class="itemR">{{item.stock}}</span>
+        </div>
+        <div>
+          <span class="itemL">num</span>
+          <span class="itemR num">{{item.num}}</span>
+        </div>
+        <div>
+          <span class="itemL">更新时间</span>
+          <span class="itemR">{{new Date(item.update_time*1000).toLocaleString()}}</span>
+        </div>
+        <div @click="checkHistory(item.abiid,item.mainname)">
+          <span class="itemL">历史库存</span>
+          <span class="itemR check">查看</span>
+        </div>
+        <i class="el-icon-close icon" @click="deleteItem(item.abiid,index)"></i>
+      </div>
+
+    </div>
+    <el-dialog
+      :title="tableShowName"
+      :visible.sync="dialogVisible"
+      width="90%"
+      top="16vh"
+      :modal-append-to-body="false"
+      id="el-dialog"
+      :show-close= "false"
+    >
+      <div class="tableWrap">
+         <table border="1">
+        <thead>
+          <th>Time</th>
+          <th>Stock</th>
+        </thead>
+        <tbody>
+          <tr v-for="(piece,index) in history" :key="index">
+            <td>{{new Date(piece.update_time*1000).toLocaleString()}}</td>
+            <td>{{piece.num}}</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+     
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      data: null,
+      dialogVisible: false,
+      history: null,
+      tableShowName:null
+    };
+  },
+  methods: {
+    checkHistory(abiid,name) {
+      this.dialogVisible = true;
+      this.tableShowName = name;
+      this.$http
+        .get(this.$http.url + "/api/commodity/history/" + abiid)
+        .then(res => {
+          this.history = res.data.data.histories;
+        });
+    },
+    deleteItem(abiid,index){
+      if(confirm('是否删除该商品')){
+        this.$http.delete(this.$http.url+'/api/commodity/info',{data:{'abiid':abiid}}).then(
+          (res)=>{
+            if(res.data.code==0){
+              this.data.splice(index,1);
+              alert('删除成功')
+            }else{
+              alert('删除失败')
+            }
+          }
+        )
+      }
+      
+    }
+  },
+  created() {
+    this.$http.get(this.$http.url + "/api/commodity/info").then(res => {
+      this.data = res.data.data;
+    });
+  }
+};
+</script>
+
+<style>
+.main {
+  width: 100%;
+  height: 100%;
+  background: #fbfbfb;
+}
+
+.info {
+  padding-left: 2rem;
+  height: 4rem;
+  line-height: 4rem;
+  font-size: 1.1rem;
+  color: #fff;
+  font-weight: bold;
+  background: #4ecf59;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 1rem;
+}
+.detail {
+  width: 100%;
+  height: calc(100% - 5rem);
+  overflow: scroll;
+}
+
+/*方案二*/
+.item {
+  position: relative;
+  width: 97%;
+  box-sizing: border-box;
+  margin: 0 auto;
+  background: #fff;
+  box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.24);
+  padding: 1rem;
+  /* height: 2re; */
+  margin-bottom: 1rem;
+}
+.item div {
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 0.2rem;
+}
+.item div .itemL {
+  display: inline-block;
+  width: 30%;
+  height: 100%;
+}
+.item div .itemR {
+  display: inline-block;
+  width: 70%;
+}
+.num {
+  color: red;
+}
+.check {
+  color: #409eff;
+}
+.icon {
+  position: absolute;
+  right: 0.5rem;
+  top: 0.5rem;
+  font-size: 1.3rem;
+}
+
+#el-dialog > div {
+  height: 70%;
+}
+#el-dialog .el-dialog__header{
+  padding: 20px 30px  20px 20px;
+}
+#el-dialog .el-dialog__body{
+  height: 75%;
+  padding: 0 20px 20px 20px;
+}
+.tableWrap{
+  width: 100%;
+  height: 100%;
+  overflow: scroll;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  box-shadow: 1px 1px 10px grey;
+}
+table tbody tr {
+  background: #fff;
+}
+table tbody tr:nth-child(odd) {
+  background: rgba(144, 144, 144, 0.15);
+}
+th,
+td {
+  height: 2rem;
+}
+
+.mainname{
+  color: #f40;
+}
+</style>
