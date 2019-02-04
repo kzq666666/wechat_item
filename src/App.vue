@@ -19,6 +19,7 @@
       </div>
     </div>
     <div id="panel">
+      <div  class="l-icon-more-outline menuBut" @click="slide">≡</div>
       <router-view></router-view>
     </div>
   </div>
@@ -30,7 +31,8 @@ export default {
   name: 'app',
   data(){
     return{
-      curPage:'main'
+      curPage:'main',
+      slideout:''
     }
   },
   methods:{
@@ -45,11 +47,14 @@ export default {
     goSetting(){
       this.curPage = 'setting';
       this.$router.push('/setting');
+    },
+    slide(){
+      this.slideout.toggle();
     }
   },
   mounted(){
     var padding = document.body.clientWidth * 0.4;
-    var slideout = new Slideout({
+    this.slideout = new Slideout({
       'panel': document.getElementById('panel'),
       'menu': document.getElementById('menu'),
       'padding': padding,
@@ -78,6 +83,15 @@ html,body,#app{
   background: #f7f7f9;
   width:40%;
   text-align: center;
+}
+.menuBut{
+  position: absolute;
+  width: 2rem;
+  text-align: center;
+  font-size: 2.5rem;
+  color: #ddd;
+  height: 4rem;
+  line-height: 4rem;
 }
 #vip{
   width: 2rem;
