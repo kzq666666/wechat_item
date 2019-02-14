@@ -90,7 +90,8 @@ export default {
                 .then(res => {
                   let historyNum = [];
                   let historyTime = [];
-                  res.data.data.histories.forEach(element => {
+                  if(JSON.stringify(res.data.data)!=='{}'){
+                     res.data.data.histories.forEach(element => {
                     historyNum.push(element.num);
                     historyTime.push(
                       new Date(element.update_time * 1000)
@@ -98,6 +99,8 @@ export default {
                         .replace(/\/2019/g, "")
                     );
                   });
+                  }
+                 
                   itemChart.setOption({
                     title: {
                       text: ""
