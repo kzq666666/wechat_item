@@ -79,7 +79,7 @@ export default {
   background: #fff;
 }
 .info{
-  padding-left: 2rem;
+  padding-left: 3rem;
   height: 4rem;
   line-height: 4rem;
   font-size: 1.1rem;

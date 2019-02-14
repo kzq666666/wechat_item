@@ -23,13 +23,13 @@
           <span class="itemL">更新时间</span>
           <span class="itemR">{{new Date(item.update_time*1000).toLocaleString()}}</span>
         </div>
-        <div @click="checkHistory(item.abiid,item.mainname)">
+        <div @click="checkHistory(item.abiid,item.mainname)" class="historyDiv">
           <span class="itemL">历史库存</span>
-          <span class="itemR check">查看</span>
+          <a class="itemR check" :ref="item.abiid">展开</a>
         </div>
+        <div :id="item.abiid" class="chart"></div>
         <i class="el-icon-close icon" @click="deleteItem(item.abiid,index)"></i>
       </div>
-
     </div>
     <el-dialog
       :title="tableShowName"
@@ -38,61 +38,142 @@
       top="16vh"
       :modal-append-to-body="false"
       id="el-dialog"
-      :show-close= "false"
+      :show-close="false"
     >
       <div class="tableWrap">
-         <table border="1">
-        <thead>
-          <th>Time</th>
-          <th>Stock</th>
-        </thead>
-        <tbody>
-          <tr v-for="(piece,index) in history" :key="index">
-            <td>{{new Date(piece.update_time*1000).toLocaleString()}}</td>
-            <td>{{piece.num}}</td>
-          </tr>
-        </tbody>
-      </table>
+        <table border="1">
+          <thead>
+            <th>Time</th>
+            <th>Stock</th>
+          </thead>
+          <tbody>
+            <tr v-for="(piece,index) in history" :key="index">
+              <td>{{new Date(piece.update_time*1000).toLocaleString()}}</td>
+              <td>{{piece.num}}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-     
     </el-dialog>
   </div>
 </template>
 
 <script>
+import echarts from "echarts";
 export default {
   data() {
     return {
       data: null,
       dialogVisible: false,
       history: null,
-      tableShowName:null
+      tableShowName: null,
+      keyList: {}
     };
   },
   methods: {
-    checkHistory(abiid,name) {
-      this.dialogVisible = true;
-      this.tableShowName = name;
-      this.$http
-        .get(this.$http.url + "/api/commodity/history/" + abiid)
-        .then(res => {
-          this.history = res.data.data.histories;
-        });
-    },
-    deleteItem(abiid,index){
-      if(confirm('是否删除该商品')){
-        this.$http.delete(this.$http.url+'/api/commodity/info',{data:{'abiid':abiid}}).then(
-          (res)=>{
-            if(res.data.code==0){
-              this.data.splice(index,1);
-              alert('删除成功')
-            }else{
-              alert('删除失败')
+    checkHistory(abiid, name) {
+      var dom = document.getElementById(abiid);
+      if (!dom.offsetHeight) {
+        this.$refs[abiid][0].innerText = "收起";
+
+        dom.style.height = "300px";
+        dom.addEventListener(
+          "webkitTransitionEnd",
+          (e) => {
+            e.preventDefault()
+            if (dom.offsetHeight) {
+              var itemChart = echarts.init(dom);
+              itemChart.showLoading();
+              this.keyList[abiid] = false;
+              this.$http
+                .get(this.$http.url + "/api/commodity/history/" + abiid)
+                .then(res => {
+                  let historyNum = [];
+                  let historyTime = [];
+                  res.data.data.histories.forEach(element => {
+                    historyNum.push(element.num);
+                    historyTime.push(
+                      new Date(element.update_time * 1000)
+                        .toLocaleDateString()
+                        .replace(/\/2019/g, "")
+                    );
+                  });
+                  itemChart.setOption({
+                    title: {
+                      text: ""
+                    },
+                    tooltip: {},
+                    toolbox: {
+                      feature: {
+                        dataView: {
+                        },
+
+                      },
+                      right:'20px',
+                    },
+                    legend: {},
+                    dataZoom: [
+                      {
+                        // 这个dataZoom组件，默认控制x轴。
+                        type: "slider", // 这个 dataZoom 组件是 slider 型 dataZoom 组件
+                        start: 10, // 左边在 10% 的位置。
+                        end: 100 // 右边在 60% 的位置。
+                      }
+                    ],
+                    xAxis: {
+                      data: historyTime.reverse()
+                    },
+                    yAxis: {
+                      type:'value',
+                      axisLabel:{
+                        formatter:this.format
+                      }
+                    },
+                    series: [
+                      {
+                        type: "line",
+                        smooth: "true",
+                        data: historyNum.reverse()
+                      }
+                    ]
+                  });
+                  itemChart.hideLoading();
+                  this.keyList[abiid] = true;
+                });
+            } else {
+              echarts.getInstanceByDom(dom).clear();
             }
-          }
-        )
+          },
+          false
+        );
+      } else {
+        if (this.keyList[abiid]) {
+        this.$refs[abiid][0].innerText = "展开";
+          dom.style.height = "0";
+          echarts.getInstanceByDom(dom).clear();
+        }
       }
-      
+      // this.dialogVisible = true;
+      // this.tableShowName = name;
+    },
+    deleteItem(abiid, index) {
+      if (confirm("是否删除该商品")) {
+        this.$http
+          .delete(this.$http.url + "/api/commodity/info", {
+            data: { abiid: abiid }
+          })
+          .then(res => {
+            if (res.data.code == 0) {
+              this.data.splice(index, 1);
+              alert("删除成功");
+            } else {
+              alert("删除失败");
+            }
+          });
+      }
+    },
+    format(params){
+      return params>=1000?(params/1000)+'k':params
     }
   },
   created() {
@@ -111,7 +192,7 @@ export default {
 }
 
 .info {
-  padding-left: 2rem;
+  padding-left: 3rem;
   height: 4rem;
   line-height: 4rem;
   font-size: 1.1rem;
@@ -168,14 +249,14 @@ export default {
 #el-dialog > div {
   height: 70%;
 }
-#el-dialog .el-dialog__header{
-  padding: 20px 30px  20px 20px;
+#el-dialog .el-dialog__header {
+  padding: 20px 30px 20px 20px;
 }
-#el-dialog .el-dialog__body{
+#el-dialog .el-dialog__body {
   height: 75%;
   padding: 0 20px 20px 20px;
 }
-.tableWrap{
+.tableWrap {
   width: 100%;
   height: 100%;
   overflow: scroll;
@@ -197,7 +278,19 @@ td {
   height: 2rem;
 }
 
-.mainname{
+.mainname {
   color: #f40;
+}
+
+.detail .item .chart {
+  /* display: none; */
+  width: 100%;
+  height: 0;
+  transition: height 1s ease;
+  border: none;
+}
+.historyDiv {
+  height: 1.6rem;
+  line-height: 2rem;
 }
 </style>

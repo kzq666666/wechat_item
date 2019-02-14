@@ -60,8 +60,9 @@ export default {
       'padding': padding,
       'tolerance': 70
     });
+    this.slideout.disableTouch();
+
   }
-  
   
 }
 </script>
@@ -87,11 +88,13 @@ html,body,#app{
 .menuBut{
   position: absolute;
   width: 2rem;
+  left: 1rem;
   text-align: center;
   font-size: 2.5rem;
-  color: #ddd;
+  color: #fff;
   height: 4rem;
   line-height: 4rem;
+  transform: scale(1.3,1)
 }
 #vip{
   width: 2rem;
