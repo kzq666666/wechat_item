@@ -79,8 +79,8 @@ export default {
         dom.style.height = "300px";
         dom.addEventListener(
           "webkitTransitionEnd",
-          (e) => {
-            e.preventDefault()
+          e => {
+            e.preventDefault();
             if (dom.offsetHeight) {
               var itemChart = echarts.init(dom);
               itemChart.showLoading();
@@ -90,56 +90,64 @@ export default {
                 .then(res => {
                   let historyNum = [];
                   let historyTime = [];
-                  if(JSON.stringify(res.data.data)!=='{}'){
-                     res.data.data.histories.forEach(element => {
-                    historyNum.push(element.num);
-                    historyTime.push(
-                      new Date(element.update_time * 1000)
-                        .toLocaleDateString()
-                        .replace(/\/2019/g, "")
-                    );
-                  });
-                  }
-                 
-                  itemChart.setOption({
-                    title: {
-                      text: ""
-                    },
-                    tooltip: {},
-                    toolbox: {
-                      feature: {
-                        dataView: {
-                        },
-
+                  if (JSON.stringify(res.data.data) !== "{}") {
+                    res.data.data.histories.forEach(element => {
+                      historyNum.push(element.num);
+                      historyTime.push(
+                        new Date(element.update_time * 1000)
+                          .toLocaleDateString()
+                          .replace(/\/2019/g, "")
+                      );
+                    });
+                    itemChart.setOption({
+                      title: {
+                        text: ""
                       },
-                      right:'20px',
-                    },
-                    legend: {},
-                    dataZoom: [
-                      {
-                        // 这个dataZoom组件，默认控制x轴。
-                        type: "slider", // 这个 dataZoom 组件是 slider 型 dataZoom 组件
-                        start: 10, // 左边在 10% 的位置。
-                        end: 100 // 右边在 60% 的位置。
+                      tooltip: {},
+                      toolbox: {
+                        feature: {
+                          dataView: {}
+                        },
+                        right: "20px"
+                      },
+                      legend: {},
+                      dataZoom: [
+                        {
+                          // 这个dataZoom组件，默认控制x轴。
+                          type: "slider", // 这个 dataZoom 组件是 slider 型 dataZoom 组件
+                          start: 10, // 左边在 10% 的位置。
+                          end: 100 // 右边在 60% 的位置。
+                        }
+                      ],
+                      xAxis: {
+                        data: historyTime.reverse()
+                      },
+                      yAxis: {
+                        type: "value",
+                        axisLabel: {
+                          formatter: this.format
+                        }
+                      },
+                      series: [
+                        {
+                          type: "line",
+                          smooth: "true",
+                          data: historyNum.reverse()
+                        }
+                      ]
+                    });
+                  }else{
+                    itemChart.setOption({
+                      title:{
+                        text:'暂无数据',
+                        textStyle:{
+                          color:'red',
+                          align:'center'
+                        },
                       }
-                    ],
-                    xAxis: {
-                      data: historyTime.reverse()
-                    },
-                    yAxis: {
-                      type:'value',
-                      axisLabel:{
-                        formatter:this.format
-                      }
-                    },
-                    series: [
-                      {
-                        type: "line",
-                        smooth: "true",
-                        data: historyNum.reverse()
-                      }
-                    ]
-                  });
+                    })
+                  }
+
                   itemChart.hideLoading();
                   this.keyList[abiid] = true;
                 });
@@ -151,7 +159,7 @@ export default {
         );
       } else {
         if (this.keyList[abiid]) {
-        this.$refs[abiid][0].innerText = "展开";
+          this.$refs[abiid][0].innerText = "展开";
           dom.style.height = "0";
           echarts.getInstanceByDom(dom).clear();
         }
@@ -175,8 +183,8 @@ export default {
           });
       }
     },
-    format(params){
-      return params>=1000?(params/1000)+'k':params
+    format(params) {
+      return params >= 1000 ? params / 1000 + "k" : params;
     }
   },
   created() {
