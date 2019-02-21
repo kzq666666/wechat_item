@@ -141,8 +141,7 @@ export default {
                       title:{
                         text:'暂无数据',
                         textStyle:{
-                          color:'red',
-                          align:'center'
+                          color:'red'
                         },
                       }
                     })
